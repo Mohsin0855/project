@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">project</string>
+    <string name="des">button</string>
+    <string name="desc">button 2</string>
+    <string name="email">E-mail</string>
+    <string name="name">Name</string>
+    <string name="banner_ad_unit_id">your-banner-ad-unit-id</string>
+</resources>
