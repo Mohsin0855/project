@@ -65,7 +65,7 @@ class ArchiveFragment : Fragment() {
         }
 
         userAdapter = UserAdapter(
-            users = emptyList(),
+            items = emptyList(),
             onFavoriteToggle = { user -> userViewModel.toggleFavorite(user) },
             archiveUser = { user ->
                 Toast.makeText(requireContext(), "${user.name} is archived", Toast.LENGTH_SHORT).show()
@@ -96,7 +96,7 @@ class ArchiveFragment : Fragment() {
             if (archivedUsers.isEmpty()) {
                 Toast.makeText(requireContext(), "No archived users found", Toast.LENGTH_SHORT).show()
             }
-            userAdapter.updateUsers(archivedUsers)
+            userAdapter.updateList(archivedUsers)
         }
     }
 

@@ -1,6 +1,7 @@
 package com.example.project.viewmodel
 
 import android.app.Activity
+import android.app.Application
 import android.content.ContentValues.TAG
 import android.content.Context
 import android.net.Uri
@@ -8,6 +9,8 @@ import android.util.Log
 import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.compose.ui.window.application
+import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -37,6 +40,9 @@ import retrofit2.converter.gson.GsonConverterFactory
 
 class UserViewModel(private val repository: UserRepository) : ViewModel() {
 
+    private val _nativeAdLiveData = MutableLiveData<NativeAd>()
+    val nativeAdLiveData: LiveData<NativeAd> get() = _nativeAdLiveData
+
     private val storage: FirebaseStorage = FirebaseStorage.getInstance()
     private val storageRef: StorageReference = storage.reference
 
@@ -53,14 +59,27 @@ class UserViewModel(private val repository: UserRepository) : ViewModel() {
     private var interstitialAd: InterstitialAd? = null
 
     //private var nativeAd: NativeAd? = null
-
     private val logging = HttpLoggingInterceptor().apply {
         level = HttpLoggingInterceptor.Level.BODY
     }
-
     private val client = OkHttpClient.Builder()
         .addInterceptor(logging)
         .build()
+    fun loadNativeAd(activity: Activity, onAdLoaded: (NativeAd) -> Unit) {
+
+        val adLoader = AdLoader.Builder(activity, "ca-app-pub-3940256099942544/2247696110")
+            .forNativeAd { nativeAd ->
+                // Trigger the callback with the loaded ad
+                _nativeAdLiveData.postValue(nativeAd)
+                Log.d("ad","addddd")
+                onAdLoaded(nativeAd)
+            }
+            .build()
+
+        // Load the ad
+        adLoader.loadAd(AdRequest.Builder().build())
+    }
+
 
     private val apiService: ApiService by lazy {
         Retrofit.Builder()

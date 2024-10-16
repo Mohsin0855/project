@@ -69,7 +69,7 @@ class FavouriteFragment : Fragment() {
         Log.d("fragment","favourite fragment")
         // Initialize the RecyclerView for favorites
         userAdapter = UserAdapter(
-            users = emptyList(),
+            items   = emptyList(),
             onFavoriteToggle = {
                     user -> userViewModel.toggleFavorite(user)
                 Log.d("onFavoriteToggle","onFavoriteToggle")},
@@ -103,7 +103,7 @@ class FavouriteFragment : Fragment() {
         userViewModel.favoriteUsers.observe(viewLifecycleOwner) { favoriteUsers ->
             loadingIndicator.visibility = View.GONE
             Log.d("FavouriteFragment", "Observed favorite users: $favoriteUsers")
-            userAdapter.updateUsers(favoriteUsers)
+            userAdapter.updateList(favoriteUsers)
             if (favoriteUsers.isEmpty()) {
                 Toast.makeText(requireContext(), "No favorite users found", Toast.LENGTH_SHORT).show()
             }

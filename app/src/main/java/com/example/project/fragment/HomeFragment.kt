@@ -30,9 +30,8 @@ class HomeFragment : Fragment() {
     private lateinit var loadingIndicator: ProgressBar
     private var selectedUser: UserEntity? = null // Store the user for which the image is selected
     private lateinit var pickImageLauncher: ActivityResultLauncher<Intent>
-    //ad mob val
+    // AdMob val
     private lateinit var adView: AdView
-    // private lateinit var nativeAdView: NativeAdView
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -50,8 +49,6 @@ class HomeFragment : Fragment() {
         adView.loadAd(adRequest)
         loadingIndicator = view.findViewById(R.id.loadingIndicator)
 
-
-        //nativeAdView = view.findViewById(R.id.nativeAdView)
         // Initialize the ActivityResultLauncher
         pickImageLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             if (result.resultCode == Activity.RESULT_OK) {
@@ -62,28 +59,28 @@ class HomeFragment : Fragment() {
                         userViewModel.updateUserProfilePicture(requireContext(), user, it) { success ->
                             loadingIndicator.visibility = View.GONE // Hide the loading indicator
                             if (!success) {
-                                // Handle any error (e.g. show a toast message)
-                                Log.d("msg","$success")
+                                Log.d("msg", "$success")
                             }
                         }
                     }
                 }
             }
         }
-        // Initializing the UserAdapter
+
+        // Initialize the UserAdapter
         userAdapter = UserAdapter(
-            users = emptyList(),
+            items = emptyList(),
             onFavoriteToggle = { user -> userViewModel.toggleFavorite(user) },
             archiveUser = { user -> userViewModel.archiveUser(user) },
             onRenameUser = { user, newName -> userViewModel.renameUser(user, newName) },
             onImageClick = { user ->
                 selectedUser = user // Store the user for which the image is being updated
-                openGallery()// Request permission and open gallery
+                openGallery() // Request permission and open gallery
             },
             onUserClick = { user ->
                 // Show the interstitial ad when the user clicks an item
                 userViewModel.showInterstitialAd(requireActivity()) {
-                    Log.d("ArchiveFragment", "User clicked on: ${user.name}")
+                    Log.d("HomeFragment", "User clicked on: ${user.name}")
                 }
             }
         )
@@ -95,17 +92,14 @@ class HomeFragment : Fragment() {
 
         // Fetch users from the API
         userViewModel.fetchUsers()
-        // Observe the users from the ViewModel
-        userViewModel.users.observe(viewLifecycleOwner) {  user ->
-            loadingIndicator.visibility = View.GONE
 
-            userAdapter.updateUsers( user )
+        // Observe the users and load native ads along with them
+        userViewModel.users.observe(viewLifecycleOwner) { users ->
+            loadingIndicator.visibility = View.GONE
+            loadNativeAdsAndUsers() // Call the function to load users and native ads
         }
 
-
         userViewModel.initFirestoreListener()
-        // Load the native ad
-        // userViewModel.loadNativeAd(requireActivity(), nativeAdView)
     }
 
     override fun onDestroyView() {
@@ -117,13 +111,30 @@ class HomeFragment : Fragment() {
     }
 
     private fun openGallery() {
-
         val intent = Intent(Intent.ACTION_PICK).apply {
             type = "image/*"
-            Log.d("fun","message")
         }
-        // Launch the gallery intent using the ActivityResultLauncher
         pickImageLauncher.launch(intent)
     }
 
+    // Function to load users and native ads
+    private fun loadNativeAdsAndUsers() {
+        // Make sure the fragment is attached to an activity and pass the activity instead of context
+        userViewModel.loadNativeAd(requireActivity()) { nativeAd ->
+            val updatedList = mutableListOf<Any>()
+Log.d("native","native ad $nativeAd")
+            // Add users and native ads at intervals
+            val users = userViewModel.users.value ?: emptyList()
+            for (i in users.indices) {
+                updatedList.add(users[i])
+
+                // Add a native ad after every 5 users
+                if (i % 5 == 0 && i != 0) {
+                    updatedList.add(nativeAd)
+                }
+            }
+
+            userAdapter.updateList(updatedList)
+        }
+    }
 }
